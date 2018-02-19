@@ -22,11 +22,12 @@
     "entities",
     "sections"
   ]
-  revision = "946d856c548ad7cfc2a1af2e10e5ec98f9327743"
+  revision = "f025d0dc0d05e80bd656e29116df5e3f5f432c89"
+  source = "https://github.com/jbeda/dxf-go"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0df6710d8478045e3449d5a156fba046a32244872d178d6bff847b01de7c5e1e"
+  inputs-digest = "1009296b2297c6dfc41fbfaf1b67960efac3ba3ae2272bfc71c5ab7f4c9ff089"
   solver-name = "gps-cdcl"
   solver-version = 1

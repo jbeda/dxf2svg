@@ -36,6 +36,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/rpaloschi/dxf-go"
+  source = "https://github.com/jbeda/dxf-go"
 
 [prune]
   go-tests = true
