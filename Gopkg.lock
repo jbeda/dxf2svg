@@ -3,31 +3,43 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:3156f00172d3f420cf79462aaac3b6109b4b0f786815ea52b4370a2c085377f1"
   name = "github.com/jbeda/geom"
   packages = ["."]
+  pruneopts = "UT"
   revision = "4107299174a83a444c887753bce11e538121c6c4"
 
 [[projects]]
   branch = "master"
+  digest = "1:1bedf9c164f19af2f90a5df9345c882d4b5a5b5aa52c208781dc96c6380a311e"
   name = "github.com/jbeda/svgdata-go"
-  packages = ["."]
-  revision = "1481d4b1f78e8f6779285bffc9a8cded47a84048"
+  packages = ["old"]
+  pruneopts = "UT"
+  revision = "5926790da95e5e5b2037dc17250e136bcf9b2c20"
 
 [[projects]]
   branch = "master"
+  digest = "1:26f8fa0d3e883af95580fb38c16d160d47f9c8db1b822738ceab540bcf662003"
   name = "github.com/rpaloschi/dxf-go"
   packages = [
     "core",
     "document",
     "entities",
-    "sections"
+    "sections",
   ]
+  pruneopts = "UT"
   revision = "f025d0dc0d05e80bd656e29116df5e3f5f432c89"
   source = "https://github.com/jbeda/dxf-go"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "1009296b2297c6dfc41fbfaf1b67960efac3ba3ae2272bfc71c5ab7f4c9ff089"
+  input-imports = [
+    "github.com/jbeda/geom",
+    "github.com/jbeda/svgdata-go/old",
+    "github.com/rpaloschi/dxf-go/core",
+    "github.com/rpaloschi/dxf-go/document",
+    "github.com/rpaloschi/dxf-go/entities",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

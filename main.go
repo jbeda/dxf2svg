@@ -23,7 +23,7 @@ import (
 	"reflect"
 
 	"github.com/jbeda/geom"
-	"github.com/jbeda/svgdata-go"
+	"github.com/jbeda/svgdata-go/old"
 	dxfcore "github.com/rpaloschi/dxf-go/core"
 	"github.com/rpaloschi/dxf-go/document"
 	"github.com/rpaloschi/dxf-go/entities"
@@ -57,17 +57,18 @@ func main() {
 	var els []svgdata.Element
 
 	for _, entity := range doc.Entities.Entities {
-		if line, ok := entity.(*entities.Line); ok {
+		switch e := entity.(type) {
+		case entities.Line:
 			opc.AddSegment(
 				svgdata.NewPathLine(
-					geom.Coord{line.Start.X, line.Start.Y},
-					geom.Coord{line.End.X, line.End.Y}))
-		} else if circle, ok := entity.(*entities.Circle); ok {
+					geom.Coord{e.Start.X, e.Start.Y},
+					geom.Coord{e.End.X, e.End.Y}))
+		case entities.Circle:
 			els = append(els, &svgdata.Circle{
-				Center: geom.Coord{circle.Center.X, circle.Center.Y},
-				Radius: circle.Radius,
+				Center: geom.Coord{e.Center.X, e.Center.Y},
+				Radius: e.Radius,
 			})
-		} else {
+		default:
 			fmt.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
 		}
 	}

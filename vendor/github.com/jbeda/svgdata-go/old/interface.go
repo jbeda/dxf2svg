@@ -14,7 +14,9 @@
 
 package svgdata
 
-import "github.com/jbeda/geom"
+import (
+	"github.com/jbeda/geom"
+)
 
 type Element interface {
 	Draw(w *SVGWriter, s ...string)
