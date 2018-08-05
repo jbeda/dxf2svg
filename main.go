@@ -126,7 +126,7 @@ func main() {
 		log.Fatal(err)
 	}
 	w := svgdata.NewSVG(file)
-	w.Start(geom.Rect{geom.Coord{0, 0}, geom.Coord{19, 11}}, "width=\"19.5in\"", "height=\"11in\"")
+	w.Start(geom.Rect{geom.Coord{0, -11}, geom.Coord{19.5, 0}}, "width=\"19.5in\"", "height=\"11in\"")
 	opc.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
 	for _, el := range els {
 		el.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
