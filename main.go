@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path"
 	"reflect"
@@ -28,6 +29,34 @@ import (
 	"github.com/rpaloschi/dxf-go/document"
 	"github.com/rpaloschi/dxf-go/entities"
 )
+
+func polarToCartesian(center dxfcore.Point, radius, angleDeg float64) geom.Coord {
+	angleRad := (angleDeg * math.Pi / 180.0)
+	center.Y = -center.Y
+	return geom.Coord{
+		X: center.X + (radius * math.Cos(angleRad)),
+		Y: center.Y - (radius * math.Sin(angleRad)),
+	}
+}
+
+func DxfCoord2GeomCoordExt(p dxfcore.Point, extrusion dxfcore.Point) geom.Coord {
+	if extrusion.Z == 1 {
+		return geom.Coord{X: p.X, Y: -p.Y}
+	} else {
+		return geom.Coord{X: -p.X, Y: -p.Y}
+	}
+}
+
+func DxfCoord2GeomCoord(p dxfcore.Point) geom.Coord {
+	return geom.Coord{X: p.X, Y: -p.Y}
+}
+
+func GeomCoordExtAdj(c geom.Coord, extrusion dxfcore.Point) geom.Coord {
+	if extrusion.Z == -1 {
+		c.X = -c.X
+	}
+	return c
+}
 
 func main() {
 
@@ -58,16 +87,33 @@ func main() {
 
 	for _, entity := range doc.Entities.Entities {
 		switch e := entity.(type) {
-		case entities.Line:
+		case *entities.Line:
 			opc.AddSegment(
 				svgdata.NewPathLine(
-					geom.Coord{e.Start.X, e.Start.Y},
-					geom.Coord{e.End.X, e.End.Y}))
-		case entities.Circle:
+					DxfCoord2GeomCoordExt(e.Start, e.ExtrusionDirection),
+					DxfCoord2GeomCoordExt(e.End, e.ExtrusionDirection)))
+		case *entities.Circle:
 			els = append(els, &svgdata.Circle{
-				Center: geom.Coord{e.Center.X, e.Center.Y},
+				Center: DxfCoord2GeomCoordExt(e.Center, e.ExtrusionDirection),
 				Radius: e.Radius,
 			})
+		case *entities.Arc:
+			start := polarToCartesian(e.Center, e.Radius, e.StartAngle)
+			end := polarToCartesian(e.Center, e.Radius, e.EndAngle)
+
+			startAngle, endAngle := e.StartAngle, e.EndAngle
+			largeArc := (endAngle - startAngle) > 180
+			if endAngle < startAngle {
+				startAngle += 360
+			}
+
+			sweep := e.ExtrusionDirection.Z == -1
+
+			opc.AddSegment(
+				svgdata.NewPathCircArc(
+					GeomCoordExtAdj(start, e.ExtrusionDirection),
+					GeomCoordExtAdj(end, e.ExtrusionDirection),
+					e.Radius, largeArc, sweep))
 		default:
 			fmt.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
 		}
@@ -80,7 +126,7 @@ func main() {
 		log.Fatal(err)
 	}
 	w := svgdata.NewSVG(file)
-	w.Start(geom.Rect{geom.Coord{0, 0}, geom.Coord{19, 11}}, "width=\"19in\"", "height=\"11in\"")
+	w.Start(geom.Rect{geom.Coord{0, 0}, geom.Coord{19, 11}}, "width=\"19.5in\"", "height=\"11in\"")
 	opc.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
 	for _, el := range els {
 		el.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
