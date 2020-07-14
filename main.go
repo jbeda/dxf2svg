@@ -24,7 +24,7 @@ import (
 	"reflect"
 
 	"github.com/jbeda/geom"
-	"github.com/jbeda/svgdata-go/old"
+	svgdata "github.com/jbeda/svgdata-go/old"
 	dxfcore "github.com/rpaloschi/dxf-go/core"
 	"github.com/rpaloschi/dxf-go/document"
 	"github.com/rpaloschi/dxf-go/entities"
@@ -39,7 +39,7 @@ func polarToCartesian(center dxfcore.Point, radius, angleDeg float64) geom.Coord
 	}
 }
 
-func DxfCoord2GeomCoordExt(p dxfcore.Point, extrusion dxfcore.Point) geom.Coord {
+func dxfCoord2GeomCoordExt(p dxfcore.Point, extrusion dxfcore.Point) geom.Coord {
 	if extrusion.Z == 1 {
 		return geom.Coord{X: p.X, Y: -p.Y}
 	} else {
@@ -47,11 +47,11 @@ func DxfCoord2GeomCoordExt(p dxfcore.Point, extrusion dxfcore.Point) geom.Coord 
 	}
 }
 
-func DxfCoord2GeomCoord(p dxfcore.Point) geom.Coord {
+func dxfCoord2GeomCoord(p dxfcore.Point) geom.Coord {
 	return geom.Coord{X: p.X, Y: -p.Y}
 }
 
-func GeomCoordExtAdj(c geom.Coord, extrusion dxfcore.Point) geom.Coord {
+func geomCoordExtAdj(c geom.Coord, extrusion dxfcore.Point) geom.Coord {
 	if extrusion.Z == -1 {
 		c.X = -c.X
 	}
@@ -90,11 +90,11 @@ func main() {
 		case *entities.Line:
 			opc.AddSegment(
 				svgdata.NewPathLine(
-					DxfCoord2GeomCoordExt(e.Start, e.ExtrusionDirection),
-					DxfCoord2GeomCoordExt(e.End, e.ExtrusionDirection)))
+					dxfCoord2GeomCoordExt(e.Start, e.ExtrusionDirection),
+					dxfCoord2GeomCoordExt(e.End, e.ExtrusionDirection)))
 		case *entities.Circle:
 			els = append(els, &svgdata.Circle{
-				Center: DxfCoord2GeomCoordExt(e.Center, e.ExtrusionDirection),
+				Center: dxfCoord2GeomCoordExt(e.Center, e.ExtrusionDirection),
 				Radius: e.Radius,
 			})
 		case *entities.Arc:
@@ -111,8 +111,8 @@ func main() {
 
 			opc.AddSegment(
 				svgdata.NewPathCircArc(
-					GeomCoordExtAdj(start, e.ExtrusionDirection),
-					GeomCoordExtAdj(end, e.ExtrusionDirection),
+					geomCoordExtAdj(start, e.ExtrusionDirection),
+					geomCoordExtAdj(end, e.ExtrusionDirection),
 					e.Radius, largeArc, sweep))
 		default:
 			fmt.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
@@ -126,10 +126,13 @@ func main() {
 		log.Fatal(err)
 	}
 	w := svgdata.NewSVG(file)
-	w.Start(geom.Rect{geom.Coord{0, -11}, geom.Coord{19.5, 0}}, "width=\"19.5in\"", "height=\"11in\"")
-	opc.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
+	w.Start(geom.Rect{
+		Min: geom.Coord{X: 0, Y: -11},
+		Max: geom.Coord{X: 19.5, Y: 0}},
+		"width=\"19.5in\"", "height=\"11in\"")
+	opc.Draw(w, "fill: none; stroke: black; stroke-width: 0.01")
 	for _, el := range els {
-		el.Draw(w, "fill: none; stroke: black; stroke-width: 0.01in")
+		el.Draw(w, "fill: none; stroke: black; stroke-width: 0.01")
 	}
 	w.End()
 	file.Close()
