@@ -114,6 +114,32 @@ func main() {
 					geomCoordExtAdj(start, e.ExtrusionDirection),
 					geomCoordExtAdj(end, e.ExtrusionDirection),
 					e.Radius, largeArc, sweep))
+		case *entities.Polyline:
+			for i := 0; i < len(e.Vertices)-1; i++ {
+				opc.AddSegment(
+					svgdata.NewPathLine(
+						dxfCoord2GeomCoordExt(e.Vertices[i].Location, e.ExtrusionDirection),
+						dxfCoord2GeomCoordExt(e.Vertices[i+1].Location, e.ExtrusionDirection)))
+			}
+			if e.Closed && len(e.Vertices) > 1 {
+				opc.AddSegment(
+					svgdata.NewPathLine(
+						dxfCoord2GeomCoordExt(e.Vertices[len(e.Vertices)].Location, e.ExtrusionDirection),
+						dxfCoord2GeomCoordExt(e.Vertices[0].Location, e.ExtrusionDirection)))
+			}
+		case *entities.LWPolyline:
+			for i := 0; i < len(e.Points)-1; i++ {
+				opc.AddSegment(
+					svgdata.NewPathLine(
+						dxfCoord2GeomCoordExt(e.Points[i].Point, e.ExtrusionDirection),
+						dxfCoord2GeomCoordExt(e.Points[i+1].Point, e.ExtrusionDirection)))
+			}
+			if e.Closed && len(e.Points) > 1 {
+				opc.AddSegment(
+					svgdata.NewPathLine(
+						dxfCoord2GeomCoordExt(e.Points[len(e.Points)].Point, e.ExtrusionDirection),
+						dxfCoord2GeomCoordExt(e.Points[0].Point, e.ExtrusionDirection)))
+			}
 		default:
 			fmt.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
 		}
