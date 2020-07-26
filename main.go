@@ -30,6 +30,9 @@ import (
 	"github.com/rpaloschi/dxf-go/entities"
 )
 
+//var dlog = log.New(os.Stderr, "DEBUG ", 0)
+var dlog = log.New(ioutil.Discard, "", 0)
+
 func polarToCartesian(center dxfcore.Point, radius, angleDeg float64) geom.Coord {
 	angleRad := (angleDeg * math.Pi / 180.0)
 	center.Y = -center.Y
@@ -42,9 +45,8 @@ func polarToCartesian(center dxfcore.Point, radius, angleDeg float64) geom.Coord
 func dxfCoord2GeomCoordExt(p dxfcore.Point, extrusion dxfcore.Point) geom.Coord {
 	if extrusion.Z == 1 {
 		return geom.Coord{X: p.X, Y: -p.Y}
-	} else {
-		return geom.Coord{X: -p.X, Y: -p.Y}
 	}
+	return geom.Coord{X: -p.X, Y: -p.Y}
 }
 
 func dxfCoord2GeomCoord(p dxfcore.Point) geom.Coord {
@@ -59,7 +61,6 @@ func geomCoordExtAdj(c geom.Coord, extrusion dxfcore.Point) geom.Coord {
 }
 
 func main() {
-
 	dxfcore.Log.SetOutput(ioutil.Discard)
 
 	if len(os.Args) < 2 {
@@ -88,26 +89,33 @@ func main() {
 	for _, entity := range doc.Entities.Entities {
 		switch e := entity.(type) {
 		case *entities.Line:
+			dlog.Printf("Processing Line\n")
 			opc.AddSegment(
 				svgdata.NewPathLine(
 					dxfCoord2GeomCoordExt(e.Start, e.ExtrusionDirection),
 					dxfCoord2GeomCoordExt(e.End, e.ExtrusionDirection)))
 		case *entities.Circle:
+			dlog.Printf("Processing Circle\n")
 			els = append(els, &svgdata.Circle{
 				Center: dxfCoord2GeomCoordExt(e.Center, e.ExtrusionDirection),
 				Radius: e.Radius,
 			})
 		case *entities.Arc:
+			dlog.Printf("Processing Arc. Radius: %f, SA: %f, EA: %f\n",
+				e.Radius, e.StartAngle, e.EndAngle)
 			start := polarToCartesian(e.Center, e.Radius, e.StartAngle)
 			end := polarToCartesian(e.Center, e.Radius, e.EndAngle)
 
 			startAngle, endAngle := e.StartAngle, e.EndAngle
-			largeArc := (endAngle - startAngle) > 180
 			if endAngle < startAngle {
-				startAngle += 360
+				endAngle += 360
 			}
+			largeArc := (endAngle - startAngle) > 180
 
 			sweep := e.ExtrusionDirection.Z == -1
+
+			dlog.Printf("  startAngle: %f, endAngle: %f, largeArc: %t, sweep: %t\n",
+				startAngle, endAngle, largeArc, sweep)
 
 			opc.AddSegment(
 				svgdata.NewPathCircArc(
@@ -115,6 +123,7 @@ func main() {
 					geomCoordExtAdj(end, e.ExtrusionDirection),
 					e.Radius, largeArc, sweep))
 		case *entities.Polyline:
+			dlog.Printf("Processing Polyline\n")
 			for i := 0; i < len(e.Vertices)-1; i++ {
 				opc.AddSegment(
 					svgdata.NewPathLine(
@@ -128,6 +137,7 @@ func main() {
 						dxfCoord2GeomCoordExt(e.Vertices[0].Location, e.ExtrusionDirection)))
 			}
 		case *entities.LWPolyline:
+			dlog.Printf("Processing LWPolyLine\n")
 			for i := 0; i < len(e.Points)-1; i++ {
 				opc.AddSegment(
 					svgdata.NewPathLine(
@@ -141,7 +151,7 @@ func main() {
 						dxfCoord2GeomCoordExt(e.Points[0].Point, e.ExtrusionDirection)))
 			}
 		default:
-			fmt.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
+			log.Printf("Unknown entity %s\n", reflect.TypeOf(entity))
 		}
 	}
 
